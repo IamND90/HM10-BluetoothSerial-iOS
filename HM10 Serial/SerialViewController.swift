@@ -35,8 +35,13 @@ class SerialViewController: UIViewController, UITextFieldDelegate, DZBluetoothSe
     @IBOutlet weak var bottomConstraint: NSLayoutConstraint!
     @IBOutlet weak var barButton: UIBarButtonItem!
     @IBOutlet weak var navItem: UINavigationItem!
+    @IBOutlet weak var labelSpeed: UILabel!
+    @IBOutlet weak var stepperSpeed: UIStepper!
 
+    @IBOutlet weak var segmentMode: UISegmentedControl!
 
+    var lastSpeedValue : Double  = 50;
+    
 //MARK: Functions
     
     override func viewDidLoad() {
@@ -49,6 +54,8 @@ class SerialViewController: UIViewController, UITextFieldDelegate, DZBluetoothSe
         // UI
         mainTextView.text = ""
         reloadView()
+        stepperSpeed.value = lastSpeedValue
+        labelSpeed.text = "\(Int(stepperSpeed.value))"
         
         NSNotificationCenter.defaultCenter().addObserver(self, selector: Selector("reloadView"), name: "reloadStartViewController", object: nil)
         
@@ -192,6 +199,44 @@ class SerialViewController: UIViewController, UITextFieldDelegate, DZBluetoothSe
     
 //MARK: IBActions
 
+    @IBAction func actionMode(sender: AnyObject) {
+        let index = segmentMode.selectedSegmentIndex;
+        let send = "!B1" + String(index+1) + "\r\n"
+        serial.sendMessageToDevice(send)
+        mainTextView.text.appendContentsOf( "Send: " + send);
+        
+    }
+    @IBAction func acitionSpeedChange(sender: AnyObject) {
+        
+        let val = Int(stepperSpeed.value);
+        labelSpeed.text = "\(val)"
+        
+        var send = ""
+        if(val < Int(lastSpeedValue)){
+            send = "!B15\r\n"
+            serial.sendMessageToDevice(send)
+        }
+        else{
+            send = "!B16\r\n"
+            serial.sendMessageToDevice(send)
+        }
+        
+        lastSpeedValue = Double(val);
+        mainTextView.text.appendContentsOf( "Send: " + send);
+        
+    }
+    @IBAction func actionRight(sender: AnyObject) {
+        let send = "!B18\r\n"
+        serial.sendMessageToDevice(send)
+         mainTextView.text.appendContentsOf( "Send: " + send);
+    }
+    
+    @IBAction func actionLeft(sender: AnyObject) {
+        let send = "!B17\r\n"
+        serial.sendMessageToDevice(send)
+         mainTextView.text.appendContentsOf( "Send: " + send);
+    }
+    
     @IBAction func barButtonPressed(sender: AnyObject) {
         if serial.connectedPeripheral == nil {
             performSegueWithIdentifier("ShowScanner", sender: self)
